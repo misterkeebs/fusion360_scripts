@@ -1,7 +1,7 @@
 {
 	"autodeskProduct":	"Fusion360",
 	"type":	"script",
-	"author":	"",
+	"author":	"Felipe Coury <felipe.coury@gmail.com>",
 	"description":	{
 		"":	""
 	},
