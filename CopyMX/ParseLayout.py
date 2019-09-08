@@ -14,15 +14,20 @@ def parse_layout():
   res = []
   for _row in layout:
     row = []
+    x = 1
     for key in _row:
       if isinstance(key, dict):
-        w = float(key['w'])
+        if key.get('w'):
+          w = float(key.get('w'))
+        if key.get('x'):
+          x += float(key.get('x'))
         continue
 
       if key.split():
         key = key.split()[0]
 
-      row.append([w, key])
+      row.append([x, w, key])
+      x = x + w
       w = 1
     res.append(row)
 
