@@ -23,6 +23,7 @@ def parse_layout():
         key = key.split()[0]
 
       row.append([w, key])
+      w = 1
     res.append(row)
 
   return res

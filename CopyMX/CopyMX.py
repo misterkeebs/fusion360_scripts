@@ -27,6 +27,7 @@ def parse_layout():
         key = key.split()[0]
 
       row.append([w, key])
+      w = 1
     res.append(row)
 
   return res
@@ -55,12 +56,13 @@ def run(context):
                 break
 
         rows = parse_layout()
-        xpos = 0
-        for row in rows:
-            for y, keyDef in enumerate(row):
+        for y, row in enumerate(rows):
+            xpos = -1
+            for keyDef in row:
                 size, key = keyDef
-                add_switch(rootComp, occ, mx, xpos, y)
+                x = xpos + (1+((size-1)/2))
                 xpos += size
+                add_switch(rootComp, occ, mx, x, -y)
 
     except:
         if ui:
