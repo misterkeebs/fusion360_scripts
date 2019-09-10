@@ -1,54 +1,67 @@
-#Author-Autodesk Inc.
-#Description-Simple script display a message.
-
 import adsk.core, traceback
 import re
 
+# LAYOUT = """
+# [["Esc","Q","W","E","R","T","Y","U","I","O","P","[", "]","Back\\n\\n\\n\\n\\n\\nspace"],
+# [{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"],
+# [{w:1.75},"Shift\\n\\n\\n1.75","Z","X","C","V","B","N","M","<\\n,",">\\n.","?\\n/",{c:"#66d1e8",w:1.25},"Shift\\n\\n\\n1.25","Fn"],
+# [{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
+# """
 LAYOUT = """
-[["Esc","Q","W","E","R","T","Y","U","I","O","P","[", "]","Back\\n\\n\\n\\n\\n\\nspace"],
-[{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"],
-[{w:1.75},"Shift\\n\\n\\n1.75","Z","X","C","V","B","N","M","<\\n,",">\\n.","?\\n/",{c:"#66d1e8",w:1.25},"Shift\\n\\n\\n1.25","Fn"],
+[[{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"],
 [{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
 """
+INIT_X = 0
+INIT_Y = 0
+INIT_Z = 0
 
-def parse_layout():
-  layout = eval(re.sub(r'([a-z]):', r'"\1":', LAYOUT))
+class Layout:
+  def __init__(self, layout):
+    self.rawLayout = layout
+    self.parse()
 
-  w = 1
-  res = []
-  for _row in layout:
-    row = []
-    x = 1
-    for key in _row:
-      if isinstance(key, dict):
-        if key.get('w'):
-          w = float(key.get('w'))
-        if key.get('x'):
-          x += float(key.get('x'))
-        continue
+  @classmethod
+  def key_file(cls, key):
+    return 'r{}_{}'.format(key['y'] + 1, int(key['size'] * 100))
 
-      if key.split():
-        key = key.split()[0]
+  def parse(self):
+    self.layout = []
 
-      row.append([x, w, key])
-      x = x + w
-      w = 1
-    res.append(row)
+    rows = eval(re.sub(r'([a-z]):', r'"\1":', LAYOUT))
+    w = 1
 
-  return res
+    for (y, _row) in enumerate(rows):
+      row = []
+      x = 1
+      for key in _row:
+        if isinstance(key, dict):
+          if key.get('w'):
+            w = float(key.get('w'))
+          if key.get('x'):
+            x += float(key.get('x'))
+          continue
 
-def add_switch(rootComp, occ, mx, xPos, yPos):
-  transform = adsk.core.Matrix3D.create()
-  ogTransform = occ.transform
-  ogTransform.translation = adsk.core.Vector3D.create(ogTransform.translation.x + (1.905 * xPos), ogTransform.translation.y + (1.905 * yPos), ogTransform.translation.z)
-  newOcc = rootComp.occurrences.addExistingComponent(mx, ogTransform)
-  newOcc.transform = ogTransform
+        parts = key.split()
+        if parts:
+          key = parts[0]
 
-def add_keycap(files, app, occ, row, size, x, y):
-  fileName = 'r{}_{}'.format(row, size)
+        rowDict = {
+          'x': x,
+          'y': y,
+          'size': w,
+          'name': key,
+        }
+        rowDict['file'] = Layout.key_file(rowDict)
+        row.append(rowDict)
+        x = x + w
+        w = 1
+
+      self.layout.append(row)
+
+def add_keycap(files, app, keyDef):
   keyFile = None
   for file in files:
-    if file.name == fileName:
+    if file.name == keyDef['file']:
       keyFile = file
       break
 
@@ -56,13 +69,8 @@ def add_keycap(files, app, occ, row, size, x, y):
   rootComp = design.rootComponent
 
   transform = adsk.core.Matrix3D.create()
-  ogTransform = occ.transform
-  ogTransform.translation = adsk.core.Vector3D.create(ogTransform.translation.x + (1.905 * (x-1)), ogTransform.translation.y + (1.905 * (y-1)), ogTransform.translation.z)
-  if keyFile is not None:
-    rootComp.occurrences.addByInsert(keyFile, ogTransform, True)
-    return None
-
-  return keyFile
+  transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y + (1.905 * (keyDef['y']-1)), INIT_Z)
+  rootComp.occurrences.addByInsert(keyFile, transform, True)
 
 def run(context):
     ui = None
@@ -74,26 +82,14 @@ def run(context):
         rootComp = design.rootComponent
         comp = design.activeComponent
 
-        mx = None
-        occ = None
-        for occ in comp.allOccurrences:
-          if occ.component.name == 'MX Series-Cherry Key v1':
-            mx = occ.component
-            break
+        keyboard = Layout(LAYOUT)
 
-        rows = parse_layout()
         project = app.data.activeProject
         files = project.rootFolder.dataFiles
         missing = []
-        for y, row in enumerate(rows):
+        for y, row in enumerate(keyboard.layout):
             for keyDef in row:
-                px, size, key = keyDef
-                x = px - 1 + ((size-1)/2)
-                # ui.messageBox('Size: {}'.format(size))
-                ret = add_keycap(files, app, occ, y+2, size*100, x, -(y-1))
-                if ret is not None:
-                  missing.append(ret)
-        ui.messageBox('Missing: {}'.format(', '.join(missing)))
+                add_keycap(files, app, keyDef)
 
     except:
         if ui:
