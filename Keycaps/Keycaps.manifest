@@ -1,0 +1,9 @@
+{
+	"autodeskProduct":	"Fusion360",
+	"type":	"script",
+	"author":	"Felipe Coury <felipe.coury@gmail.com>",
+	"description":	{
+		"":	""
+	},
+	"supportedOS":	"windows|mac"
+}
