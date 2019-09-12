@@ -1,3 +1,4 @@
+# import adsk.core, traceback
 import adsk.core, traceback
 import re
 
@@ -8,8 +9,8 @@ import re
 # [{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
 # """
 LAYOUT = """
-[[{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"],
-[{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
+[["Esc","Q","W","E","R","T","Y","U","I","O","P","[", "]","Back\\n\\n\\n\\n\\n\\nspace"],
+[{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"]]
 """
 INIT_X = 0
 INIT_Y = 0
@@ -58,19 +59,49 @@ class Layout:
 
       self.layout.append(row)
 
+def find_file(files, file):
+  for _file in files:
+    if _file.name == file:
+      return _file
+  return None
+
+def find_match(files, row, size):
+  match_name = 'r{}_{}'.format(row, size)
+  return find_file(files, match_name)
+
+def find_key(files, file):
+  perfect_match = find_file(files, file)
+  if perfect_match:
+    return perfect_match
+
+  size = file.split('_')[1]
+  row = int(file.split('_')[0][1])
+  if row >= 1:
+    for i in range(row, 5):
+      match = find_match(files, i, size)
+      if match:
+        return match
+
+  if row <= 4:
+    for i in range(1, row+1):
+      match = find_match(files, i, size)
+      if match:
+        return match
+
 def add_keycap(files, app, keyDef):
-  keyFile = None
-  for file in files:
-    if file.name == keyDef['file']:
-      keyFile = file
-      break
+  keyFile = find_key(files, keyDef['file'])
+  if not keyFile:
+    return
 
   design = app.activeProduct
   rootComp = design.rootComponent
 
   transform = adsk.core.Matrix3D.create()
   transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y + (1.905 * (keyDef['y']-1)), INIT_Z)
-  rootComp.occurrences.addByInsert(keyFile, transform, True)
+  try:
+    rootComp.occurrences.addByInsert(keyFile, transform, True)
+  except:
+    app.userInterface.messageBox('Could not add file: {}'.format(keyDef['file']))
 
 def run(context):
     ui = None
@@ -91,6 +122,16 @@ def run(context):
             for keyDef in row:
                 add_keycap(files, app, keyDef)
 
+        ui.messageBox('Done')
+
     except:
         if ui:
             ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+
+# files = [
+#   {'name': 'r1_125'},
+#   {'name': 'r2_125'},
+#   {'name': 'r3_125'},
+# ]
+# # print find_key(files, 'r4_125')
+# print add_keycap(files, None, {'file': 'r3_125'})
