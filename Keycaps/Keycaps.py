@@ -1,17 +1,16 @@
 # import adsk.core, traceback
 import adsk.core, traceback
-import re
+import re, math
 
-# LAYOUT = """
-# [["Esc","Q","W","E","R","T","Y","U","I","O","P","[", "]","Back\\n\\n\\n\\n\\n\\nspace"],
-# [{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"],
-# [{w:1.75},"Shift\\n\\n\\n1.75","Z","X","C","V","B","N","M","<\\n,",">\\n.","?\\n/",{c:"#66d1e8",w:1.25},"Shift\\n\\n\\n1.25","Fn"],
-# [{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
-# """
 LAYOUT = """
 [["Esc","Q","W","E","R","T","Y","U","I","O","P","[", "]","Back\\n\\n\\n\\n\\n\\nspace"],
-[{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"]]
+[{w:1.25},"Tab\\n\\n\\n1.25","A","S","D","F","G","H","J","K","L",":\\n;","",{w:1.75},"Enter\\n\\n\\n1.75"],
+[{w:1.75},"Shift\\n\\n\\n1.75","Z","X","C","V","B","N","M","<\\n,",">\\n.","?\\n/",{c:"#66d1e8",w:1.25},"Shift\\n\\n\\n1.25","Fn"],
+[{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
 """
+# LAYOUT = """
+# [[{w:1.25},"Tab\\n\\n\\n1.25","A","S"]]
+# """
 INIT_X = 0
 INIT_Y = 0
 INIT_Z = 0
@@ -99,9 +98,13 @@ def add_keycap(files, app, keyDef):
   transform = adsk.core.Matrix3D.create()
   transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y + (1.905 * (keyDef['y']-1)), INIT_Z)
   try:
-    rootComp.occurrences.addByInsert(keyFile, transform, True)
+    rotX = adsk.core.Matrix3D.create()
+    rotX.setToRotation(2 * math.pi/4, adsk.core.Vector3D.create(1,0,0), adsk.core.Point3D.create(0,0,0))
+    transform.transformBy(rotX)
+
+    occ = rootComp.occurrences.addByInsert(keyFile, transform, True)
   except:
-    app.userInterface.messageBox('Could not add file: {}'.format(keyDef['file']))
+    app.userInterface.messageBox('Could not add file: {} - {}'.format(keyDef['file'], traceback.format_exc()))
 
 def run(context):
     ui = None
