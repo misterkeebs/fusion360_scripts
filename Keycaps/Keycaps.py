@@ -9,7 +9,7 @@ LAYOUT = """
 [{c:"#cccccc",w:1.25},"Ctrl\\n\\n\\n1.25",{x:1,w:1.25},"Alt\\n\\n\\n1.25",{w:7},"\\n\\n\\n7",{w:1.25},"Alt\\n\\n\\n1.25",{x:1,w:1.25},"Ctrl\\n\\n\\n1.25"]]
 """
 # LAYOUT = """
-# [[{w:1.25},"Tab\\n\\n\\n1.25","A","S"]]
+# [["A","S"],["A","S"]]
 # """
 INIT_X = 0
 INIT_Y = 0
@@ -96,7 +96,7 @@ def add_keycap(files, app, keyDef):
   rootComp = design.rootComponent
 
   transform = adsk.core.Matrix3D.create()
-  transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y + (1.905 * (keyDef['y']-1)), INIT_Z)
+  transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y, INIT_Z + (1.905 * (keyDef['y']-1)))
   try:
     rotX = adsk.core.Matrix3D.create()
     rotX.setToRotation(2 * math.pi/4, adsk.core.Vector3D.create(1,0,0), adsk.core.Point3D.create(0,0,0))
