@@ -5,6 +5,7 @@ This is a collection of Fusion 360 scripts I created to automate some aspects of
 To install the scripts, make sure you copy the contents of the root folder to the appropriate folder on your OS:
 
 **macOS** - `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts`
+
 **Windows** - `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts`
 
 For more information please refer to the [How to install an ADD-IN and Script in Fusion 360?](https://knowledge.autodesk.com/search-result/caas/sfdcarticles/sfdcarticles/How-to-install-an-ADD-IN-and-Script-in-Fusion-360.html) article on Autodesk's website.
