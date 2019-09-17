@@ -37,9 +37,12 @@ class Layout:
       row = []
       x = 1
       for key in _row:
+        h = 1
         if isinstance(key, dict):
           if key.get('w'):
             w = float(key.get('w'))
+          if key.get('h'):
+            h = float(key.get('h'))
           if key.get('x'):
             x += float(key.get('x'))
           if key.get('y'):
@@ -54,6 +57,7 @@ class Layout:
           'x': x,
           'y': y,
           'size': w,
+          'height': h,
           'name': key,
         }
         rowDict['file'] = Layout.key_file(rowDict)
