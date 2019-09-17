@@ -93,6 +93,16 @@ def find_key(files, file):
       if match:
         return match
 
+def find_keycap_component(app, keyDef):
+  row = int(keyDef['y'])
+  size = keyDef['size']
+  match_prefix = 'r{}_{}'.format(row, size)
+
+  design = app.activeProduct
+  for occ in design.activeComponent.allOccurrences:
+    if occ.component.name.startswith(match_prefix):
+      return occ.component
+
 def add_keycap(files, app, keyDef):
   keyFile = find_key(files, keyDef['file'])
   if not keyFile:
@@ -103,12 +113,18 @@ def add_keycap(files, app, keyDef):
 
   transform = adsk.core.Matrix3D.create()
   transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y, INIT_Z + (1.905 * (keyDef['y']-1)))
-  try:
-    rotX = adsk.core.Matrix3D.create()
-    rotX.setToRotation(2 * math.pi/4, adsk.core.Vector3D.create(1,0,0), adsk.core.Point3D.create(0,0,0))
-    transform.transformBy(rotX)
+  rotX = adsk.core.Matrix3D.create()
+  rotX.setToRotation(2 * math.pi/4, adsk.core.Vector3D.create(1,0,0), adsk.core.Point3D.create(0,0,0))
+  transform.transformBy(rotX)
 
-    occ = rootComp.occurrences.addByInsert(keyFile, transform, True)
+  try:
+    # tries to find a match first
+    match = find_keycap_component(app, keyDef)
+    occ = None
+    if match:
+      occ = rootComp.occurrences.addExistingComponent(match, transform)
+    else:
+      occ = rootComp.occurrences.addByInsert(keyFile, transform, True)
   except:
     app.userInterface.messageBox('Could not add file: {} - {}'.format(keyDef['file'], traceback.format_exc()))
 
