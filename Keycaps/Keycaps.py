@@ -94,20 +94,12 @@ def find_key(files, file):
         return match
 
 def find_keycap_component(app, keyDef):
-  row = int(keyDef['y'])
-  size = keyDef['size']
-  match_prefix = 'r{}_{}'.format(row, size)
-
   design = app.activeProduct
   for occ in design.activeComponent.allOccurrences:
-    if occ.component.name.startswith(match_prefix):
+    if occ.component.name.startswith(keyDef['file']):
       return occ.component
 
 def add_keycap(files, app, keyDef):
-  keyFile = find_key(files, keyDef['file'])
-  if not keyFile:
-    return
-
   design = app.activeProduct
   rootComp = design.rootComponent
 
@@ -124,6 +116,11 @@ def add_keycap(files, app, keyDef):
     if match:
       occ = rootComp.occurrences.addExistingComponent(match, transform)
     else:
+      keyFile = find_key(files, keyDef['file'])
+      if not keyFile:
+        ui.messageBox('Could not find suitable file for {}'.format(keyDef['file']))
+        return
+
       occ = rootComp.occurrences.addByInsert(keyFile, transform, True)
   except:
     app.userInterface.messageBox('Could not add file: {} - {}'.format(keyDef['file'], traceback.format_exc()))
