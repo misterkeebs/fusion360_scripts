@@ -137,14 +137,14 @@ def add_keycap(files, app, keyDef):
     else:
       keyFile = find_key(files, keyDef['file'])
       if not keyFile:
-        ui.messageBox('Could not find suitable file for {}'.format(keyDef['file']))
-        return
+        raise Exception('Could not find suitable file')
 
       occ = rootComp.occurrences.addByInsert(keyFile, transform, True)
   except:
     app.userInterface.messageBox('Could not add file: {} - {}'.format(keyDef['file'], traceback.format_exc()))
 
 def run(context):
+    start_time = time.time()
     ui = None
     try:
         app = adsk.core.Application.get()
