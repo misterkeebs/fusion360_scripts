@@ -1,14 +1,14 @@
 # import adsk.core, traceback
 import adsk.core, traceback
-import re, math
+import re, math, time
 
 LAYOUT = """
-[["Esc","Q","W","E","R","T","Y","U","I","O","P","&larr;",{x:0.5},"7","8","9"],
-[{w:1.25},"Ctrl","A","S","D","F","G","H","J","K","L",{w:1.75},"Enter",{x:0.5},"4","5","6"],
-[{w:1.75},"Shift","Z","X","C","V","B","N","M","< ,",{w:1.25},"Fn1",{x:1.5},"1","2","3"],
-[{y:-0.75,x:11.25},"&uarr;"],
-[{y:-0.25,w:1.25},"Ctrl","Win",{w:1.25},"Alt",{w:2.25},"Space",{x:0.5,a:7,w:2.75},"",{a:4},"Alt",{x:3.5},"0","."],
-[{y:-0.75,x:10.25},"&larr;","&darr;","&rarr;"]]
+[["Esc",{x:1},"F1","F2","F3","F4",{x:0.5},"F5","F6","F7","F8",{x:0.5},"F9","F10","F11","F12",{x:0.25},"PrtSc","Scroll Lock","Pause Break"],
+[{y:0.5},"~ `","! 1","@ 2","# 3","$ 4","% 5","^ 6","& 7","* 8","( 9",") 0","_ -","+ =",{w:2},"Backspace",{x:0.25},"Insert","Home","PgUp",{x:0.25},"Num Lock","/","*","-"],
+[{w:1.5},"Tab","Q","W","E","R","T","Y","U","I","O","P","{ [","} ]",{w:1.5},"|",{x:0.25},"Delete","End","PgDn",{x:0.25},"7 Home","8 ↑","9 PgUp",{h:2},"+"],
+[{w:1.75},"Caps Lock","A","S","D","F","G","H","J","K","L",": ;","'",{w:2.25},"Enter",{x:3.5},"4 ←","5","6 →"],
+[{w:2.25},"Shift","Z","X","C","V","B","N","M","< ,","> .","? /",{w:2.75},"Shift",{x:1.25},"↑",{x:1.25},"1 End","2 ↓","3 PgDn",{h:2},"Enter"],
+[{w:1.25},"Ctrl",{w:1.25},"Win",{w:1.25},"Alt",{a:7,w:6.25},"",{a:4,w:1.25},"Alt",{w:1.25},"Win",{w:1.25},"Menu",{w:1.25},"Ctrl",{x:0.25},"←","↓","→",{x:0.25,w:2},"0 Ins",". Del"]]
 """
 # LAYOUT = """
 # [["A","S"],["A","S"]]
@@ -163,7 +163,9 @@ def run(context):
             for keyDef in row:
                 add_keycap(files, app, keyDef)
 
-        ui.messageBox('Done')
+        # your code
+        elapsed_time = time.time() - start_time
+        ui.messageBox('Done in {}s'.format(int(elapsed_time)))
 
     except:
         if ui:
