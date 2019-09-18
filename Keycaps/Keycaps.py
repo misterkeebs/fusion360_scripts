@@ -24,7 +24,14 @@ class Layout:
 
   @classmethod
   def key_file(cls, key):
-    return 'r{}_{}'.format(int(key['y']), int(key['size'] * 100))
+    row = int(key['y'])
+    size = int(key['size'] * 100)
+    if key['height'] > 1:
+      if row == 2:
+        return 'r2-3_200vert'
+      if row > 2:
+        return 'r3-4_200vert'
+    return 'r{}_{}'.format(row, size)
 
   def parse(self):
     self.layout = []
@@ -32,12 +39,12 @@ class Layout:
     rows = eval(re.sub(r'([a-z]):', r'"\1":', LAYOUT))
     w = 1
     y = 1
+    h = 1
 
     for (_y, _row) in enumerate(rows):
       row = []
       x = 1
       for key in _row:
-        h = 1
         if isinstance(key, dict):
           if key.get('w'):
             w = float(key.get('w'))
@@ -57,13 +64,14 @@ class Layout:
           'x': x,
           'y': y,
           'size': w,
-          'height': h,
+          'height': int(h),
           'name': key,
         }
         rowDict['file'] = Layout.key_file(rowDict)
         row.append(rowDict)
         x = x + w
         w = 1
+        h = 1
 
       y += 1
       self.layout.append(row)
@@ -85,6 +93,9 @@ def find_key(files, file):
 
   size = file.split('_')[1]
   row = int(file.split('_')[0][1])
+  if row > 4:
+    row = 4
+
   if row >= 1:
     for i in range(row, 5):
       match = find_match(files, i, size)
@@ -108,7 +119,11 @@ def add_keycap(files, app, keyDef):
   rootComp = design.rootComponent
 
   transform = adsk.core.Matrix3D.create()
-  transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * (keyDef['x']-1)), INIT_Y, INIT_Z + (1.905 * (keyDef['y']-1)))
+  x = keyDef['x']-1
+  if keyDef['height'] > 1:
+    x += .5
+
+  transform.translation = adsk.core.Vector3D.create(INIT_X + (1.905 * x), INIT_Y, INIT_Z + (1.905 * (keyDef['y']-1)))
   rotX = adsk.core.Matrix3D.create()
   rotX.setToRotation(2 * math.pi/4, adsk.core.Vector3D.create(1,0,0), adsk.core.Point3D.create(0,0,0))
   transform.transformBy(rotX)
